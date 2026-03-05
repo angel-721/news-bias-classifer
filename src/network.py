@@ -21,9 +21,10 @@ class NetworkClassifer(nn.Module):
         x = outputs.last_hidden_state
 
         scores = self.at(x)
-        # mask is 1 for real tokens, 0 for padding — invert for masked_fill
+        # mask is 1 for real tokens, 0 for padding
         scores = scores.masked_fill(mask.unsqueeze(-1) == 0, float("-inf"))
         weights = torch.softmax(scores, dim=1)
         pooled = (weights * x).sum(dim=1)
 
-        return self.fc(pooled)
+        logits = self.fc(pooled)
+        return logits

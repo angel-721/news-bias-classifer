@@ -1,4 +1,3 @@
-import polars as pl
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, random_split
@@ -26,7 +25,7 @@ if __name__ == "__main__":
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2)
     criterion = nn.CrossEntropyLoss()
 
-    epochs = 10
+    epochs = 3
     best_val_loss = float("inf")
 
     for epoch in range(epochs):

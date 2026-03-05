@@ -1,34 +1,27 @@
+from config import LABELS
 import polars as pl
 import torch
+import warnings
 from torch.utils.data import Dataset
 from transformers import DistilBertTokenizer
 
-bias_map = {"Unlikely": 0, "Likely": 1}
+# Suppress tokenizer sequence length warning (we handle chunking manually)
+warnings.filterwarnings("ignore", message=".*Token indices sequence length.*")
 
 tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
 
 class BiasDataset(Dataset):
     def __init__(self, path, window_size=512, stride=256):
-        """
-        Dataset with sliding window chunking for long articles.
-
-        Args:
-            path: Path to parquet file
-            window_size: Max tokens per chunk (default: 512)
-            stride: Step size for sliding window (default: 256, 50% overlap)
-        """
         self.window_size = window_size
         self.stride = stride
 
         df = pl.read_parquet(path)
         texts = df["content"].str.replace_all("\n", " ").to_list()
-        labels = [bias_map[b] for b in df["text_label"].to_list()]
+        labels = [LABELS[b] for b in df["text_label"].to_list()]
 
-        # Build chunks from all articles
-        self.chunks = []  # List of (input_ids, attention_mask, label)
+        self.chunks = []  
         for text, label in zip(texts, labels):
-            # Tokenize without truncation first
             encoded = tokenizer(
                 text,
                 truncation=False,
@@ -41,7 +34,6 @@ class BiasDataset(Dataset):
                 end_idx = min(start_idx + self.window_size, len(input_ids))
                 chunk_ids = input_ids[start_idx:end_idx]
 
-                # Pad if needed
                 attention_mask = torch.ones_like(chunk_ids)
                 if len(chunk_ids) < self.window_size:
                     pad_length = self.window_size - len(chunk_ids)
@@ -56,7 +48,6 @@ class BiasDataset(Dataset):
 
                 self.chunks.append((chunk_ids, attention_mask, label))
 
-                # Stop if we've reached the end
                 if end_idx == len(input_ids):
                     break
 

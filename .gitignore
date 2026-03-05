@@ -12,3 +12,4 @@ wheels/
 # Data objects
 embeddings.pkl
 *.parquet
+*.txt
