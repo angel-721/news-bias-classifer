@@ -13,3 +13,4 @@ wheels/
 embeddings.pkl
 *.parquet
 *.txt
+*.pth
