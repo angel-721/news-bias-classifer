@@ -1,6 +1,7 @@
 # News Bias Classifer.
 
-Used in this hugging face space: https://huggingface.co/spaces/angel-721/News-Bias-Classifier
+Deployed as an API as Hugging Face Space: https://huggingface.co/spaces/angel-721/News-Bias-Classifier
+Used by "The Bias Post" project: https://github.com/angel-721/the-bias-post(Add url to deployed project soon)
 
 This project uses the **NewsMediaBias-Plus** dataset created by the Vector Institute Research Team.
 
