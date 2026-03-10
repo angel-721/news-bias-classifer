@@ -1,11 +1,13 @@
-from config import LABELS
+import warnings
+
 import polars as pl
 import torch
-import warnings
 from torch.utils.data import Dataset
 from transformers import DistilBertTokenizer
 
-# Suppress tokenizer sequence length warning (we handle chunking manually)
+from config import LABELS
+
+# Suppress tokenizer sequence length warning since I'm not scared to go beyond the limit
 warnings.filterwarnings("ignore", message=".*Token indices sequence length.*")
 
 tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
@@ -20,7 +22,7 @@ class BiasDataset(Dataset):
         texts = df["content"].str.replace_all("\n", " ").to_list()
         labels = [LABELS[b] for b in df["text_label"].to_list()]
 
-        self.chunks = []  
+        self.chunks = []
         for text, label in zip(texts, labels):
             encoded = tokenizer(
                 text,
@@ -37,14 +39,15 @@ class BiasDataset(Dataset):
                 attention_mask = torch.ones_like(chunk_ids)
                 if len(chunk_ids) < self.window_size:
                     pad_length = self.window_size - len(chunk_ids)
-                    chunk_ids = torch.cat([
-                        chunk_ids,
-                        torch.zeros(pad_length, dtype=chunk_ids.dtype)
-                    ])
-                    attention_mask = torch.cat([
-                        attention_mask,
-                        torch.zeros(pad_length, dtype=attention_mask.dtype)
-                    ])
+                    chunk_ids = torch.cat(
+                        [chunk_ids, torch.zeros(pad_length, dtype=chunk_ids.dtype)]
+                    )
+                    attention_mask = torch.cat(
+                        [
+                            attention_mask,
+                            torch.zeros(pad_length, dtype=attention_mask.dtype),
+                        ]
+                    )
 
                 self.chunks.append((chunk_ids, attention_mask, label))
 
